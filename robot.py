@@ -63,12 +63,23 @@ class Robot(magicbot.MagicRobot):
         joystick_vz = -rescale_js(
             self.joystick.getZ(), deadzone=0.2, exponential=20.0, rate=self.spin_rate
         )
-        self.chassis.set_inputs(
-            joystick_vx,
-            joystick_vy,
-            joystick_vz,
-            field_oriented=not self.joystick.getRawButton(6),
-        )
+        self.chassis.set_inputs(joystick_vx, joystick_vy, joystick_vz)
+
+    def testPeriodic(self):
+        joystick_x = -self.joystick.getY() / 2
+
+        if self.joystick.getRawButton(7):
+            self.module_a.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_x)
+            self.module_a.store_steer_offsets()
+        if self.joystick.getRawButton(8):
+            self.module_b.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_x)
+            self.module_b.store_steer_offsets()
+        if self.joystick.getRawButton(9):
+            self.module_c.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_x)
+            self.module_c.store_steer_offsets()
+        if self.joystick.getRawButton(10):
+            self.module_d.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_x)
+            self.module_d.store_steer_offsets()
 
 
 if __name__ == "__main__":
