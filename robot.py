@@ -46,6 +46,8 @@ class Robot(magicbot.MagicRobot):
         self.joystick = wpilib.Joystick(0)
         self.gamepad = wpilib.XboxController(1)
 
+        self.spin_rate = 1.5
+
     def teleopInit(self):
         """Initialise driver control."""
         pass
@@ -63,7 +65,11 @@ class Robot(magicbot.MagicRobot):
         joystick_vz = -rescale_js(
             self.joystick.getZ(), deadzone=0.2, exponential=20.0, rate=self.spin_rate
         )
-        self.chassis.set_inputs(joystick_vx, joystick_vy, joystick_vz)
+
+        if joystick_vx or joystick_vy or joystick_vz:
+            self.chassis.set_inputs(joystick_vx, joystick_vy, joystick_vz)
+        else:
+            self.chassis.set_inputs(0, 0, 0)
 
     def testPeriodic(self):
         joystick_x = -self.joystick.getY() / 2
@@ -71,13 +77,13 @@ class Robot(magicbot.MagicRobot):
         if self.joystick.getRawButton(7):
             self.module_a.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_x)
             self.module_a.store_steer_offsets()
-        if self.joystick.getRawButton(8):
+        if self.joystick.getRawButton(9):
             self.module_b.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_x)
             self.module_b.store_steer_offsets()
-        if self.joystick.getRawButton(9):
+        if self.joystick.getRawButton(10):
             self.module_c.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_x)
             self.module_c.store_steer_offsets()
-        if self.joystick.getRawButton(10):
+        if self.joystick.getRawButton(8):
             self.module_d.steer_motor.set(ctre.ControlMode.PercentOutput, joystick_x)
             self.module_d.store_steer_offsets()
 

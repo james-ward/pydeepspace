@@ -14,12 +14,12 @@ class Chassis:
     DELTA_T = 1 / 50  # 50hz
 
     # TODO find values
-    initial_pos = np.array
-    STEERING_ANGLE_BOUNDS = List
-    STEERING_SPEED_BOUNDS = List
-    STEERING_ACCELERATION_BOUNDS = List
-    DRIVE_SPEED_BOUNDS = List
-    DRIVE_ACCELERATION_BOUNDS = List
+    initial_pos = [0, 0]  # np.array
+    STEERING_ANGLE_BOUNDS = [-10, 10]  # rad
+    STEERING_SPEED_BOUNDS = [-5, 5]  # rad/s
+    STEERING_ACCELERATION_BOUNDS = [-2, 2]  # rad/s2
+    DRIVE_SPEED_BOUNDS = [-128.85438618239385, 128.85438618239385]  # rad/s
+    DRIVE_ACCELERATION_BOUNDS = [-100, 100]  # rad/s2
 
     def __init__(self):
         self.vx = 0
@@ -60,12 +60,11 @@ class Chassis:
         angle = math.atan2(self.vx, self.vy)
         speed = math.hypot(self.vx, self.vy)
 
-        # TODO controller mapping
+        # TODO controller mapping\
+        self.lmda_d = np.array([self.vx, self.vy, self.vz])
+        self.mu_d = self.vz * 3
 
-        self.lmda_d = np.ndarray
-        self.mu_d = float
-
-        desired_angle, angular_velocity, odometry = self.controller.control_step(
+        desired_angles, angular_velocities, odometry = self.controller.control_step(
             modules_beta,
             modules_phi_dot=modules_angular_velocity,
             lmda_d=self.lmda_d,
@@ -73,7 +72,12 @@ class Chassis:
             delta_t=self.DELTA_T,
         )
 
-        for module in self.modules:
+        # desired_angles = [angle] * 4
+        # angular_velocities = [speed] * 4
+
+        for module, desired_angle, angular_velocity in zip(
+            self.modules, desired_angles, angular_velocities
+        ):
             module.set_drive_angular_velocity(angular_velocity)
             module.set_beta_angle(desired_angle)
 

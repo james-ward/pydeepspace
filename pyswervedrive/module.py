@@ -2,6 +2,7 @@ import ctre
 import math
 from dataclasses import dataclass
 from networktables import NetworkTables
+from utilities.functions import constrain_angle
 
 
 class SwerveModule:
@@ -28,6 +29,9 @@ class SwerveModule:
     DRIVE_COUNTS_PER_REV = DRIVE_ENCODER_COUNTS_PER_REV * DRIVE_ENCODER_REDUCTION
     DRIVE_COUNTS_PER_RADIAN = DRIVE_COUNTS_PER_REV / math.tau
     DRIVE_COUNTS_PER_METRE = DRIVE_COUNTS_PER_REV / WHEEL_CIRCUMFERENCE
+
+    DRIVE_ANGULAR_VELOCITY_TO_COUNTS_PER_100MS = DRIVE_COUNTS_PER_RADIAN * 0.1
+    DRIVE_COUNTS_PER_100MS_TO_METRES_PER_SECOND = DRIVE_COUNTS_PER_METRE * 0.1
 
     # Steer Motor
     STEER_ENCODER_COUNTS_PER_REV = 1024
@@ -97,9 +101,16 @@ class SwerveModule:
         self.steer_pos = self.nt.getEntry("steer_pos")
         self.drive_pos = self.nt.getEntry("drive_pos")
 
+        self.steer_set_pos_entry = self.nt.getEntry("steer_set_pos")
+
     def update_network_tables(self):
         self.steer_pos.setDouble(self.steer_motor.getSelectedSensorPosition(0))
         self.drive_pos.setDouble(self.drive_motor.getSelectedSensorPosition(0))
+        self.steer_set_pos_entry.setDouble(self.steer_set_pos)
+
+    @property
+    def steer_enc_offset(self):
+        return int(self.steer_enc_offset_entry.getDouble(0))
 
     def store_steer_offsets(self):
         """Store the current steer positions as the offsets."""
@@ -108,16 +119,30 @@ class SwerveModule:
         )
 
     def get_beta_angle(self):
-        pass
+        steer_pos = self.steer_motor.getSelectedSensorPosition(0)
+        return constrain_angle(
+            float(steer_pos + self.steer_enc_offset) / self.STEER_COUNTS_PER_RADIAN
+        )
 
     def set_beta_angle(self, beta_angle):
-        pass
+        set_point = beta_angle * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
+        self.set_steer_pos(set_point)
+
+    def set_steer_pos(self, set_point):
+        self.steer_set_pos = set_point
+        self.steer_motor.set(ctre.ControlMode.Position, set_point)
 
     def get_drive_angular_velocity(self):
         counts_per_100ms = self.steer_motor.getSelectedSensorVelocity(0)
-        return counts_per_100ms * 10 / self.DRIVE_COUNTS_PER_RADIAN
+        return counts_per_100ms / self.DRIVE_ANGULAR_VELOCITY_TO_COUNTS_PER_100MS
 
     def set_drive_angular_velocity(self, angular_velocity):
-        counts_per_100ms = angular_velocity * self.DRIVE_COUNTS_PER_RADIAN / 10
+        counts_per_100ms = (
+            angular_velocity * self.DRIVE_ANGULAR_VELOCITY_TO_COUNTS_PER_100MS
+        )
 
         self.drive_motor.set(ctre.ControlMode.Velocity, counts_per_100ms)
+
+    def stop(self):
+        self.drive_motor.stopMotor()
+        self.steer_motor.stopMotor()
