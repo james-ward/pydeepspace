@@ -3,7 +3,7 @@ import math
 import ctre
 import numpy as np
 
-from pyswervedrive.module import SwerveModule
+from components.module import SwerveModule
 from utilities.functions import constrain_angle
 
 
@@ -11,7 +11,6 @@ class PhysicsEngine:
 
     X_WHEELBASE = 0.50
     Y_WHEELBASE = 0.62
-    GRAVITY = 9.8
 
     def __init__(self, controller):
         self.controller = controller
@@ -24,8 +23,6 @@ class PhysicsEngine:
         self.drive_velocity_to_native_units = self.drive_counts_per_meter * 0.1
 
         # for modules [a, b, c, d]. used to iterate over them
-        # self.module_steer_can_ids = [48, 46, 44, 42]
-        # self.module_drive_can_ids = [49, 47, 45, 43]
         self.module_steer_can_ids = [1, 3, 5, 7]
         self.module_drive_can_ids = [2, 4, 6, 8]
         self.module_steer_offsets = [0] * 4

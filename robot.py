@@ -4,8 +4,9 @@ import ctre
 import magicbot
 import wpilib
 
-from pyswervedrive.chassis import Chassis
-from pyswervedrive.module import SwerveModule
+from components.chassis import Chassis
+from components.module import SwerveModule
+
 from utilities.functions import rescale_js
 
 

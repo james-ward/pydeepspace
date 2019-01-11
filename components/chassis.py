@@ -1,6 +1,5 @@
 from swervedrive.icr import Controller
 from .module import SwerveModule
-from typing import List
 import numpy as np
 import math
 
@@ -57,18 +56,14 @@ class Chassis:
             [module.get_drive_angular_velocity() for module in self.modules]
         )
 
-        angle = math.atan2(self.vx, self.vy)
-        speed = math.hypot(self.vx, self.vy)
-
         # TODO controller mapping\
-        self.lmda_d = np.array([self.vx, self.vy, self.vz])
-        self.mu_d = self.vz * 3
+        lmda_d, mu_d = self.twist_to_icr(self.vx, self.vy, self.vz)
 
         desired_angles, angular_velocities, odometry = self.controller.control_step(
             modules_beta,
             modules_phi_dot=modules_angular_velocity,
-            lmda_d=self.lmda_d,
-            mu_d=self.mu_d,
+            lmda_d=lmda_d,
+            mu_d=mu_d,
             delta_t=self.DELTA_T,
         )
 
@@ -80,6 +75,21 @@ class Chassis:
         ):
             module.set_drive_angular_velocity(angular_velocity)
             module.set_beta_angle(desired_angle)
+
+    @staticmethod
+    def twist_to_icr(vx: float, vy: float, vz: float):
+        """Convert a twist command (vx, vy, vz) to lmda and mu.
+
+        Eta represents the motion about the ICR as represented in the projective plane.
+        See eq.(1) of the control paper.
+        """
+        norm = np.linalg.norm([vx, vy, vz])
+        if np.isclose(norm, 0, atol=0.01):
+            return None, None
+        eta = (1/norm) * np.array([-vy, vx, vz, norm**2])
+        lmda = eta[0:3]
+        mu = eta[3]
+        return lmda, mu
 
     def set_inputs(self, vx, vy, vz):
         self.vx = vx
