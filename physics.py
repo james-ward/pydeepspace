@@ -70,10 +70,6 @@ class PhysicsEngine:
             talon["quad_velocity"] = int(enc_speed)
             motor_speeds.append(speed)
 
-        lf_speed, lr_speed, rr_speed, rf_speed = motor_speeds
-
-        lf_angle, lr_angle, rr_angle, rf_angle = steer_positions
-
         # vx, vy = the_cool_drive(motor_speeds, steer_positions, tm_diff)
 
         vx, vy, vw = better_four_motor_swerve_drivetrain(

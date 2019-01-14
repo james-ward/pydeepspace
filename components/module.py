@@ -20,7 +20,7 @@ class SwerveModule:
 
     # Drive Motor
     DRIVE_ENCODER_COUNTS_PER_REV = 4096
-    DRIVE_ENCODER_TYPE = ctre.FeedbackDevice.Analog
+    DRIVE_ENCODER_TYPE = ctre.FeedbackDevice.QuadEncoder
     DRIVE_ENCODER_REDUCTION = 1 / 1
 
     DRIVE_MOTOR_FREESPEED = 84000
@@ -35,7 +35,7 @@ class SwerveModule:
 
     # Steer Motor
     STEER_ENCODER_COUNTS_PER_REV = 1024
-    STEER_ENCODER_TYPE = ctre.FeedbackDevice.QuadEncoder
+    STEER_ENCODER_TYPE = ctre.FeedbackDevice.CTRE_MagEncoder_Absolute
     STEER_ENCODER_REDUCTION = 1 / 1
 
     STEER_COUNTS_PER_REV = STEER_ENCODER_COUNTS_PER_REV * STEER_ENCODER_REDUCTION
@@ -62,6 +62,20 @@ class SwerveModule:
 
         self.x_pos = x_pos
         self.y_pos = y_pos
+
+        self.steer_set_point = 0
+
+        self.alpha = math.atan2(self.x_pos, self.y_pos)
+        self.alpha_offset = ((math.pi / 2) - self.alpha) * self.STEER_COUNTS_PER_RADIAN
+
+        self.l = math.hypot(self.x_pos, self.y_pos)
+
+        self.drive_motor.configSelectedFeedbackSensor(
+            self.DRIVE_ENCODER_TYPE, 0, timeoutMs=10
+        )
+        self.steer_motor.configSelectedFeedbackSensor(
+            self.STEER_ENCODER_TYPE, 0, timeoutMs=10
+        )
 
         self.reverse_drive_direction = reverse_drive_direction
         self.drive_motor.setSensorPhase(self.reverse_drive_direction)
@@ -101,12 +115,12 @@ class SwerveModule:
         self.steer_pos = self.nt.getEntry("steer_pos")
         self.drive_pos = self.nt.getEntry("drive_pos")
 
-        self.steer_set_pos_entry = self.nt.getEntry("steer_set_pos")
+        self.steer_set_point_entry = self.nt.getEntry("steer_set_point")
 
     def update_network_tables(self):
         self.steer_pos.setDouble(self.steer_motor.getSelectedSensorPosition(0))
         self.drive_pos.setDouble(self.drive_motor.getSelectedSensorPosition(0))
-        self.steer_set_pos_entry.setDouble(self.steer_set_pos)
+        self.steer_set_point_entry.setDouble(self.steer_set_point)
 
     @property
     def steer_enc_offset(self):
@@ -121,19 +135,24 @@ class SwerveModule:
     def get_beta_angle(self):
         steer_pos = self.steer_motor.getSelectedSensorPosition(0)
         return constrain_angle(
-            float(steer_pos + self.steer_enc_offset) / self.STEER_COUNTS_PER_RADIAN
+            float(steer_pos - self.steer_enc_offset + self.alpha_offset)
+            / self.STEER_COUNTS_PER_RADIAN
         )
 
     def set_beta_angle(self, beta_angle):
-        set_point = beta_angle * self.STEER_COUNTS_PER_RADIAN + self.steer_enc_offset
+        set_point = (
+            beta_angle * self.STEER_COUNTS_PER_RADIAN
+            - self.steer_enc_offset
+            + self.alpha_offset
+        )
         self.set_steer_pos(set_point)
 
     def set_steer_pos(self, set_point):
-        self.steer_set_pos = set_point
+        self.steer_set_point = set_point
         self.steer_motor.set(ctre.ControlMode.Position, set_point)
 
     def get_drive_angular_velocity(self):
-        counts_per_100ms = self.steer_motor.getSelectedSensorVelocity(0)
+        counts_per_100ms = self.drive_motor.getSelectedSensorVelocity(0)
         return counts_per_100ms / self.DRIVE_ANGULAR_VELOCITY_TO_COUNTS_PER_100MS
 
     def set_drive_angular_velocity(self, angular_velocity):

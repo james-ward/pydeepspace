@@ -1,7 +1,6 @@
 from swervedrive.icr import Controller
 from .module import SwerveModule
 import numpy as np
-import math
 
 
 class Chassis:
@@ -28,12 +27,8 @@ class Chassis:
     def setup(self):
         self.modules = [self.module_a, self.module_b, self.module_c, self.module_d]
 
-        modules_alpha = np.array(
-            [math.atan2(module.x_pos, module.y_pos) for module in self.modules]
-        )
-        modules_l = np.array(
-            [math.hypot(module.x_pos, module.y_pos) for module in self.modules]
-        )
+        modules_alpha = np.array([module.alpha for module in self.modules])
+        modules_l = np.array([module.l for module in self.modules])
         modules_b = np.array([module.b for module in self.modules])
         modules_radius = np.array([module.WHEEL_RADIUS for module in self.modules])
 
@@ -67,9 +62,6 @@ class Chassis:
             delta_t=self.DELTA_T,
         )
 
-        # desired_angles = [angle] * 4
-        # angular_velocities = [speed] * 4
-
         for module, desired_angle, angular_velocity in zip(
             self.modules, desired_angles, angular_velocities
         ):
@@ -86,7 +78,7 @@ class Chassis:
         norm = np.linalg.norm([vx, vy, vz])
         if np.isclose(norm, 0, atol=0.01):
             return None, None
-        eta = (1/norm) * np.array([-vy, vx, vz, norm**2])
+        eta = (1 / norm) * np.array([-vy, vx, vz, norm ** 2])
         lmda = eta[0:3]
         mu = eta[3]
         return lmda, mu
