@@ -65,7 +65,7 @@ class SwerveModule:
 
         self.steer_set_point = 0
 
-        self.alpha = math.atan2(self.x_pos, self.y_pos)
+        self.alpha = math.atan2(self.y_pos, self.x_pos)
         self.alpha_offset = ((math.pi / 2) - self.alpha) * self.STEER_COUNTS_PER_RADIAN
 
         self.l = math.hypot(self.x_pos, self.y_pos)
