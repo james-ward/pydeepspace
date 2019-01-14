@@ -137,9 +137,8 @@ class SwerveModule:
     def get_beta_angle(self):
         steer_pos = self.steer_motor.getSelectedSensorPosition(0)
         return constrain_angle(
-            float(steer_pos) / self.STEER_COUNTS_PER_RADIAN
-            - self.steer_enc_offset
-            - self.alpha_offset
+            (float(steer_pos) - self.steer_enc_offset - self.alpha_offset)
+            / self.STEER_COUNTS_PER_RADIAN
         )
 
     def set_beta_angle(self, beta_angle):
