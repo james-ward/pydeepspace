@@ -68,7 +68,7 @@ class SwerveModule:
         self.alpha = math.atan2(self.y_pos, self.x_pos)
         # ADDITION of this value goes from a robot frame to a beta angle (relative to tangiental position)
         # relative to the robot's frame of reference
-        self.alpha_offset = self.alpha * self.STEER_COUNTS_PER_RADIAN
+        self.alpha_offset = (self.alpha-math.pi/2) * self.STEER_COUNTS_PER_RADIAN
 
         self.l = math.hypot(self.x_pos, self.y_pos)
 
