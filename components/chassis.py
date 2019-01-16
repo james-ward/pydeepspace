@@ -15,8 +15,8 @@ class Chassis:
     initial_pos = [0, 0]  # np.array
     STEERING_ANGLE_BOUNDS = [-10, 10]  # rad
     STEERING_SPEED_BOUNDS = [-5, 5]  # rad/s
-    STEERING_ACCELERATION_BOUNDS = [-2, 2]  # rad/s2
-    DRIVE_SPEED_BOUNDS = [-128.85438618239385, 128.85438618239385]  # rad/s
+    STEERING_ACCELERATION_BOUNDS = [-20, 20]  # rad/s2
+    DRIVE_SPEED_BOUNDS = [-128, 128]  # rad/s
     DRIVE_ACCELERATION_BOUNDS = [-100, 100]  # rad/s2
 
     def __init__(self):
@@ -77,7 +77,7 @@ class Chassis:
         """
         norm = np.linalg.norm([vx, vy, vz])
         if np.isclose(norm, 0, atol=0.01):
-            return None, None
+            return None, 0
         eta = (1 / norm) * np.array([-vy, vx, vz, norm ** 2])
         lmda = eta[0:3]
         mu = eta[3]
