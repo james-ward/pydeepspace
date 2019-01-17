@@ -66,9 +66,6 @@ class SwerveModule:
         self.steer_set_point = 0
 
         self.alpha = math.atan2(self.y_pos, self.x_pos)
-        # ADDITION of this value goes from a robot frame to a beta angle (relative to tangiental position)
-        # relative to the robot's frame of reference
-        self.alpha_offset = (self.alpha-math.pi/2) * self.STEER_COUNTS_PER_RADIAN
 
         self.l = math.hypot(self.x_pos, self.y_pos)
 
@@ -137,15 +134,20 @@ class SwerveModule:
     def get_beta_angle(self):
         steer_pos = self.steer_motor.getSelectedSensorPosition(0)
         return constrain_angle(
-            (float(steer_pos) - self.steer_enc_offset - self.alpha_offset)
-            / self.STEER_COUNTS_PER_RADIAN
+            (float(steer_pos) - self.steer_enc_offset) / self.STEER_COUNTS_PER_RADIAN
+            - math.pi / 2
+            - self.alpha
         )
 
     def set_beta_angle(self, beta_angle):
         set_point = (
-            beta_angle * self.STEER_COUNTS_PER_RADIAN
-            + self.steer_enc_offset
-            + self.alpha_offset
+            constrain_angle(
+                beta_angle
+                + math.pi / 2
+                + self.alpha
+                + self.steer_enc_offset / self.STEER_COUNTS_PER_RADIAN
+            )
+            * self.STEER_COUNTS_PER_RADIAN
         )
         self.set_steer_pos(set_point)
 
