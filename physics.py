@@ -72,7 +72,7 @@ class PhysicsEngine:
 
         # vx, vy = the_cool_drive(motor_speeds, steer_positions, tm_diff)
 
-        vx, vy, vw = better_four_motor_swerve_drivetrain(
+        vx, vy, vz = better_four_motor_swerve_drivetrain(
             motor_speeds, steer_positions, self.module_x_offsets, self.module_y_offsets
         )
 
@@ -80,8 +80,7 @@ class PhysicsEngine:
         vx /= 0.3048
         vy /= 0.3048
 
-        # self.controller.distance_drive(vx, -vy, 0)
-        self.controller.vector_drive(-vy, vx, -vw, tm_diff)
+        self.controller.vector_drive(-vx, -vy, -vz, tm_diff)
 
 
 def the_cool_drive(module_speeds, module_angles, tm_diff):
