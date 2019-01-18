@@ -12,7 +12,7 @@ class Chassis:
     DELTA_T = 1 / 50  # 50hz
 
     # TODO find values
-    initial_pos = [0, 0]  # np.array
+    initial_pos = np.array([0, 0, 0]).reshape(-1,1)  # np.array
     STEERING_ANGLE_BOUNDS = [-10, 10]  # rad
     STEERING_SPEED_BOUNDS = [-5, 5]  # rad/s
     STEERING_ACCELERATION_BOUNDS = [-20, 20]  # rad/s2
@@ -28,9 +28,9 @@ class Chassis:
         self.modules = [self.module_a, self.module_b, self.module_c, self.module_d]
 
         modules_alpha = np.array([module.alpha for module in self.modules])
-        modules_l = np.array([module.l for module in self.modules])
-        modules_b = np.array([module.b for module in self.modules])
-        modules_radius = np.array([module.WHEEL_RADIUS for module in self.modules])
+        modules_l = np.array([module.l for module in self.modules]).reshape(-1)
+        modules_b = np.array([module.b for module in self.modules]).reshape(-1)
+        modules_radius = np.array([module.WHEEL_RADIUS for module in self.modules]).reshape(-1)
 
         self.controller = Controller(
             modules_alpha,
@@ -46,11 +46,11 @@ class Chassis:
         )
 
     def execute(self):
-        modules_beta = np.array([module.get_beta_angle() for module in self.modules])
+        modules_beta = np.array([module.get_beta_angle() for module in self.modules]).reshape(-1,1)
         modules_angular_velocity = np.array(
             [module.get_drive_angular_velocity() for module in self.modules]
-        )
-
+        ).reshape(-1,1)
+        print("phi dot: %s" % modules_angular_velocity)
         # TODO controller mapping\
         lmda_d, mu_d = self.twist_to_icr(self.vx, self.vy, self.vz)
 
@@ -61,6 +61,9 @@ class Chassis:
             mu_d=mu_d,
             delta_t=self.DELTA_T,
         )
+        desired_angles = desired_angles.reshape(-1)
+        angular_velocities = angular_velocities.reshape(-1)
+        odometry = odometry.reshape(-1)
 
         for module, desired_angle, angular_velocity in zip(
             self.modules, desired_angles, angular_velocities
@@ -78,10 +81,9 @@ class Chassis:
         norm = np.linalg.norm([vx, vy, vz])
         if np.isclose(norm, 0, atol=0.01):
             return None, 0
-        eta = (1 / norm) * np.array([-vy, vx, vz, norm ** 2])
-        lmda = eta[0:3]
-        mu = eta[3]
-        return lmda, mu
+        lmda = (1 / norm) * np.array([-vy, vx, vz])
+        mu = norm
+        return lmda.reshape(-1,1), mu
 
     def set_inputs(self, vx, vy, vz):
         self.vx = vx
