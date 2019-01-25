@@ -34,6 +34,12 @@ class PhysicsEngine:
         self.controller.add_device_gyro_channel("navxmxp_spi_4_angle")
 
     def initialize(self, hal_data):
+        speeds = np.array([[1],[1],[1],[1]])
+        angles = np.array([[3/4*math.pi],[-3/4*math.pi],[-1/4*math.pi],[1/4*math.pi]])
+        vx,vy,vz = better_four_motor_swerve_drivetrain(
+                speeds, angles, self.module_x_offsets, self.module_y_offsets
+                )
+        print(vx,vy,vz)
         pass
 
     def update_sim(self, hal_data, now, tm_diff):
@@ -57,6 +63,7 @@ class PhysicsEngine:
                 / SwerveModule.STEER_COUNTS_PER_RADIAN
             )
             steer_positions.append(position)
+            print(position/math.pi*180)
 
         motor_speeds = []
         for i, can_id in enumerate(self.module_drive_can_ids):
@@ -72,7 +79,7 @@ class PhysicsEngine:
 
         # vx, vy = the_cool_drive(motor_speeds, steer_positions, tm_diff)
 
-        vx, vy, vw = better_four_motor_swerve_drivetrain(
+        vx, vy, vz = better_four_motor_swerve_drivetrain(
             motor_speeds, steer_positions, self.module_x_offsets, self.module_y_offsets
         )
 
@@ -81,7 +88,8 @@ class PhysicsEngine:
         vy /= 0.3048
 
         # self.controller.distance_drive(vx, -vy, 0)
-        self.controller.vector_drive(-vy, vx, -vw, tm_diff)
+        # self.controller.vector_drive(-vy, vx, -vw, tm_diff)
+        self.controller.vector_drive(vx, vy, vz, tm_diff)
 
 
 def the_cool_drive(module_speeds, module_angles, tm_diff):

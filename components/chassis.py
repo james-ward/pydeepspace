@@ -17,7 +17,7 @@ class Chassis:
     STEERING_SPEED_BOUNDS = [-5, 5]  # rad/s
     STEERING_ACCELERATION_BOUNDS = [-20, 20]  # rad/s2
     DRIVE_SPEED_BOUNDS = [-128, 128]  # rad/s
-    DRIVE_ACCELERATION_BOUNDS = [-100, 100]  # rad/s2
+    DRIVE_ACCELERATION_BOUNDS = [-200, 200]  # rad/s2
 
     def __init__(self):
         self.vx = 0
@@ -27,10 +27,10 @@ class Chassis:
     def setup(self):
         self.modules = [self.module_a, self.module_b, self.module_c, self.module_d]
 
-        modules_alpha = np.array([module.alpha for module in self.modules])
-        modules_l = np.array([module.l for module in self.modules]).reshape(-1)
-        modules_b = np.array([module.b for module in self.modules]).reshape(-1)
-        modules_radius = np.array([module.WHEEL_RADIUS for module in self.modules]).reshape(-1)
+        modules_alpha = np.array([module.alpha for module in self.modules]).reshape(-1,1)
+        modules_l = np.array([module.l for module in self.modules]).reshape(-1,1)
+        modules_b = np.array([module.b for module in self.modules]).reshape(-1,1)
+        modules_radius = np.array([module.WHEEL_RADIUS for module in self.modules]).reshape(-1,1)
 
         self.controller = Controller(
             modules_alpha,
@@ -50,8 +50,8 @@ class Chassis:
         modules_angular_velocity = np.array(
             [module.get_drive_angular_velocity() for module in self.modules]
         ).reshape(-1,1)
-        print("phi dot: %s" % modules_angular_velocity)
-        # TODO controller mapping\
+        print(modules_angular_velocity)
+        # TODO controller mapping
         lmda_d, mu_d = self.twist_to_icr(self.vx, self.vy, self.vz)
 
         desired_angles, angular_velocities, odometry = self.controller.control_step(
@@ -65,11 +65,14 @@ class Chassis:
         angular_velocities = angular_velocities.reshape(-1)
         odometry = odometry.reshape(-1)
 
+        import math
         for module, desired_angle, angular_velocity in zip(
             self.modules, desired_angles, angular_velocities
         ):
             module.set_drive_angular_velocity(angular_velocity)
             module.set_beta_angle(desired_angle)
+            print("%s\t%s\t%s" % (desired_angle/math.pi*180, ((desired_angle+module.alpha+math.pi/2)/math.pi*180)%360, angular_velocity))
+        print("")
 
     @staticmethod
     def twist_to_icr(vx: float, vy: float, vz: float):

@@ -21,28 +21,28 @@ class Robot(magicbot.MagicRobot):
             steer_motor=ctre.TalonSRX(1),
             drive_motor=ctre.TalonSRX(2),
             x_pos=0.25,  # TODO: update correct x and y pos
-            y_pos=0.31,
+            y_pos=0.25,
         )
         self.module_b = SwerveModule(  # bottom left module
             "b",
             steer_motor=ctre.TalonSRX(3),
             drive_motor=ctre.TalonSRX(4),
             x_pos=-0.25,  # TODO: update correct x and y pos
-            y_pos=0.31,
+            y_pos=0.25,
         )
         self.module_c = SwerveModule(  # bottom right module
             "c",
             steer_motor=ctre.TalonSRX(5),
             drive_motor=ctre.TalonSRX(6),
             x_pos=-0.25,  # TODO: update correct x and y pos
-            y_pos=-0.31,
+            y_pos=-0.25,
         )
         self.module_d = SwerveModule(  # top right module
             "d",
             steer_motor=ctre.TalonSRX(7),
             drive_motor=ctre.TalonSRX(8),
             x_pos=0.25,  # TODO: update correct x and y pos
-            y_pos=-0.31,
+            y_pos=-0.25,
         )
         self.joystick = wpilib.Joystick(0)
         self.gamepad = wpilib.XboxController(1)

@@ -13,7 +13,7 @@ class SwerveModule:
         D: float
         F: float
 
-    WHEEL_DIAMETER = 0.5
+    WHEEL_DIAMETER = 3*25.4/1000
     WHEEL_RADIUS = WHEEL_DIAMETER / 2
     WHEEL_CIRCUMFERENCE = WHEEL_DIAMETER * math.pi
     b = 0
