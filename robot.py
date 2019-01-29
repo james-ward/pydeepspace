@@ -2,6 +2,7 @@
 
 import ctre
 import magicbot
+import math
 import wpilib
 
 from components.chassis import Chassis
@@ -49,6 +50,10 @@ class Robot(magicbot.MagicRobot):
 
         self.spin_rate = 1.5
 
+        if wpilib.RobotBase.isSimulation():
+            from pyfrc.sim import get_user_renderer
+            self.renderer = get_user_renderer()
+
     def teleopInit(self):
         """Initialise driver control."""
         pass
@@ -71,6 +76,28 @@ class Robot(magicbot.MagicRobot):
             self.chassis.set_inputs(joystick_vx, joystick_vy, joystick_vz)
         else:
             self.chassis.set_inputs(0, 0, 0)
+
+        if wpilib.RobotBase.isSimulation():
+            from swervedrive.icr.kinematicmodel import KinematicModel
+            self.renderer.clear()
+            if self.renderer:
+                # Render the velocity arrows
+                color = "#0000ff" if self.chassis.controller.kinematic_model.state == KinematicModel.State.RUNNING else "#ffff00"
+                for module in self.chassis.modules:
+                    steer_position = module.get_beta_angle() + math.pi/2 + module.alpha
+                    x_offset = module.x_pos
+                    y_offset = module.y_pos
+                    speed = module.get_drive_angular_velocity()
+                    direction = -1 if speed < 0 else 1
+                    dx = direction * math.cos(steer_position) * 0.3
+                    dy = direction * math.sin(steer_position) * 0.3
+                    self.renderer.draw_line([
+                        (x_offset/0.3048, y_offset/0.3048),
+                        ((x_offset+dx)/0.3048, (y_offset+dy)/0.3048),
+                        ],
+                        color=color,
+                        robot_coordinates=True, arrow=True, width=2)
+
 
     def testPeriodic(self):
         joystick_x = -self.joystick.getY() / 2

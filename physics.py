@@ -6,11 +6,12 @@ import numpy as np
 from components.module import SwerveModule
 from utilities.functions import constrain_angle
 
+import pyfrc
 
 class PhysicsEngine:
 
-    X_WHEELBASE = 0.50
-    Y_WHEELBASE = 0.62
+    X_WHEELBASE = 0.75
+    Y_WHEELBASE = 0.75
 
     def __init__(self, controller):
         self.controller = controller
@@ -34,12 +35,6 @@ class PhysicsEngine:
         self.controller.add_device_gyro_channel("navxmxp_spi_4_angle")
 
     def initialize(self, hal_data):
-        speeds = np.array([[1],[1],[1],[1]])
-        angles = np.array([[3/4*math.pi],[-3/4*math.pi],[-1/4*math.pi],[1/4*math.pi]])
-        vx,vy,vz = better_four_motor_swerve_drivetrain(
-                speeds, angles, self.module_x_offsets, self.module_y_offsets
-                )
-        print(vx,vy,vz)
         pass
 
     def update_sim(self, hal_data, now, tm_diff):
@@ -58,12 +53,13 @@ class PhysicsEngine:
         for can_id, offset in zip(self.module_steer_can_ids, self.module_steer_offsets):
             value = hal_data["CAN"][can_id]["pid0_target"]
             hal_data["CAN"][can_id]["pulse_width_position"] = int(value)
+            hal_data["CAN"][can_id]["quad_position"] = int(value)
             position = constrain_angle(
                 (hal_data["CAN"][can_id]["pulse_width_position"] - offset)
                 / SwerveModule.STEER_COUNTS_PER_RADIAN
             )
             steer_positions.append(position)
-            print(position/math.pi*180)
+            #print(position/math.pi*180)
 
         motor_speeds = []
         for i, can_id in enumerate(self.module_drive_can_ids):
