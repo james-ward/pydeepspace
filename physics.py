@@ -146,6 +146,7 @@ def better_four_motor_swerve_drivetrain(
         module_states[i * 2 + 1, 0] = y_vel
 
     lstsq_ret = np.linalg.lstsq(A, module_states, rcond=None)
+    print("Residuals: %s" % lstsq_ret[1])
     vx, vy, vz = lstsq_ret[0].reshape(3)
 
     return vx, vy, vz
