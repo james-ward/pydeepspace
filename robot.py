@@ -91,9 +91,10 @@ class Robot(magicbot.MagicRobot):
                     direction = -1 if speed < 0 else 1
                     dx = direction * math.cos(steer_position) * 0.3
                     dy = direction * math.sin(steer_position) * 0.3
+                    # y axis is flipped in the sim, so flip the positions of the arrows
                     self.renderer.draw_line([
-                        (x_offset/0.3048, y_offset/0.3048),
-                        ((x_offset+dx)/0.3048, (y_offset+dy)/0.3048),
+                        (x_offset/0.3048, -y_offset/0.3048),
+                        ((x_offset+dx)/0.3048, -(y_offset+dy)/0.3048),
                         ],
                         color=color,
                         robot_coordinates=True, arrow=True, width=2)
