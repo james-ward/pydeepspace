@@ -21,6 +21,7 @@ class PurePursuit:
         self.look_ahead = look_ahead
         self.completed_path = False
         self.distance_traveled = 0
+        self.trapezoid = False
 
     def find_intersections(self, waypoint_start, waypoint_end, robot_position):
         """
@@ -73,9 +74,9 @@ class PurePursuit:
             print("No intersection found")
 
     def build_path(self, waypoints):
+        current_waypoint = 0
         """
         Take in a list of waypoints used to build a path.
-
         The waypoints must be a tuple (x, y, speed), this method will
         create waypoints with these co-ordinates and distance
         along the path from the start of the trajectory.
@@ -96,6 +97,19 @@ class PurePursuit:
             self.waypoints.append((x, y, speed, waypoint_distance))
         self.current_waypoint_number = 0
         print(self.waypoints)
+        if self.trapezoid == True:
+            x, y, speed = waypoints[current_waypoint]
+            waypoint_distance += math.hypot(
+                x - previous_waypoint[0], y - previous_waypoint[1]
+            )
+            accel, decel = self.generate_trapezoidal_function()
+            point_1 = self.waypoints[current_waypoint] - self.waypoints[current_waypoint]
+            point_2 = self.waypoints[current_waypoint + 1] - self.waypoints[current_waypoint]
+            angle = math.atan2(point_2[1], point_2[0])
+            sin_x = math.sin(angle)
+            cos_y = math.cos(angle)
+            start_cruise = (sin_x * accel) + waypoint[current_waypoint][0], (cos_y * accel) + waypoints[current_waypoint][1]
+            start_decel = (sin_x * (waypoint_distance - decel)) + waypoints[current_waypoint][0], (cos_y * (waypoint_distance - decel)) + waypoints[current_waypoint][1]
 
     def compute_direction(
         self, robot_position, segment_start, segment_end, distance_along_path
@@ -173,3 +187,22 @@ class PurePursuit:
         vx, vy = direction * speed
         heading = 0
         return vx, vy, heading
+
+    def generate_trapezoidal_function(self, v, u, a, d):
+        """Generate a trapezoidal function for acceleration.
+        
+        Args:
+            v = final speed
+            u = initial speed
+            a = acceleration
+            d = deceleration
+        """
+        d = abs(d)
+        v_accel = (v ** 2 - u ** 2) / (2 * a)
+        v_decel = (0.2 ** 2 - v ** 2) / (2 * d)
+        if (v_decel < v_accel):
+            self.trapezoid = False
+            return (v_accel + v_decel) / 2
+        else:
+            self.trapezoid = True
+            return v_accel, v_decel

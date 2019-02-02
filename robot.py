@@ -177,6 +177,5 @@ class Robot(magicbot.MagicRobot):
                 module.drive_motor.getMotorOutputPercent(),
             )
 
-
 if __name__ == "__main__":
     wpilib.run(Robot)
