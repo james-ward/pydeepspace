@@ -22,7 +22,7 @@ class PurePursuit:
         self.completed_path = False
         self.distance_traveled = 0
         self.trapezoid = False
-        self.max_speed = 3
+        self.max_speed = 3  # <-- change to actuall max speed when avaliable
 
     def find_intersections(self, waypoint_start, waypoint_end, robot_position):
         """
