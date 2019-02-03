@@ -76,13 +76,13 @@ class PurePursuit:
             print("No intersection found")
 
     def build_path(self, waypoints):
-        current_waypoint = 0
         """
         Take in a list of waypoints used to build a path.
         The waypoints must be a tuple (x, y, speed), this method will
         create waypoints with these co-ordinates and distance
         along the path from the start of the trajectory.
         """
+        current_waypoint = 0
         self.last_robot_x = waypoints[0][0]
         self.last_robot_y = waypoints[0][1]
         self.completed_path = False
