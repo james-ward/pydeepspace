@@ -21,7 +21,7 @@ class PurePursuit:
         self.look_ahead = look_ahead
         self.completed_path = False
         self.distance_traveled = 0
-        self.trapezoid = False
+        self.trapezoid = True
         self.max_speed = 3  # <-- change to actuall max speed when avaliable
 
     def find_intersections(self, waypoint_start, waypoint_end, robot_position):
@@ -71,6 +71,7 @@ class PurePursuit:
                 return intersection_1
             else:
                 return intersection_2
+
         else:
             print("No intersection found")
 
@@ -99,21 +100,24 @@ class PurePursuit:
         self.current_waypoint_number = 0
         print(self.waypoints)
         if current_waypoint <= len(self.waypoints):
-            end_point = (
-                self.waypoints[current_waypoint + 1] - self.waypoints[current_waypoint]
+            end_point_x = (
+                self.waypoints[current_waypoint + 1][0] - self.waypoints[current_waypoint][0]
             )
-            angle = math.atan2(end_point[1], end_point[0])
+            end_point_y = (
+                self.waypoints[current_waypoint + 1][1] - self.waypoints[current_waypoint][1]
+            )
+            angle = math.atan2(end_point_y, end_point_x)
             sin_x = math.sin(angle)
             cos_y = math.cos(angle)
+            x, y = waypoints[current_waypoint][0], waypoints[current_waypoint][1]
+            waypoint_distance = math.hypot(
+                x - previous_waypoint[0], y - previous_waypoint[1]
+            )
 
-            if self.trapezoid == True:
-                x, y, speed = waypoints[current_waypoint]
-                waypoint_distance += math.hypot(
-                    x - previous_waypoint[0], y - previous_waypoint[1]
-                )
-                accel, decel, speed = self.generate_trapezoidal_function(
+            if self.trapezoid:
+                accel, decel = self.generate_traezoidal_distances(
                     self.max_speed, self.waypoints[current_waypoint][2], 0.5, 0.5
-                )  # <--- enter actually accleration and decelartion values when avalible
+                )  # ^ enter actuall acceleration and decleration values when avaliable ^
                 start_cruise = (
                     (sin_x * accel) + waypoints[current_waypoint][0],
                     (cos_y * accel) + waypoints[current_waypoint][1],
@@ -124,27 +128,27 @@ class PurePursuit:
                 )
                 self.waypoints.insert(
                     current_waypoint + 1,
-                    (start_cruise, self.max_speed, waypoint_distance),
+                    (start_cruise[0], start_cruise[1], self.max_speed, waypoint_distance),
                 )
                 self.waypoints.insert(
                     current_waypoint + 2,
-                    (start_decel, self.max_speed, waypoint_distance),
+                    (start_decel[0], start_decel[1], self.max_speed, waypoint_distance),
                 )
                 current_waypoint += 3
                 print("new waypoints")
                 print("")
                 print(waypoints)
                 print("")
-            if self.trapezoid == False:
-                dist_to_midpoint = self.generate_trapezoidal_function(
+            else:
+                dist_to_midpoint = self.generate_traezoidal_distances(
                     self.max_speed, self.waypoints[current_waypoint][2], 0.5, 0.5
-                )  # <--- enter actually acceleration and decleration values when avaliable
+                )  # ^ enter actuall acceleration and decleration values when avaliable ^
                 midpoint = (
                     (sin_x * dist_to_midpoint) + waypoints[current_waypoint][0],
-                    (cos_y * dist_to_midpoint) + waypoints[current_waypoint][1],
+                    (cos_y * dist_to_midpoint) + waypoints[current_waypoint][1]
                 )
                 self.waypoints.insert(
-                    current_waypoint + 1, (midpoint, self.max_speed, waypoint_distance)
+                    current_waypoint + 1, (midpoint[0], midpoint[1], self.max_speed, waypoint_distance)
                 )
                 current_waypoint += 2
 
@@ -225,8 +229,8 @@ class PurePursuit:
         heading = 0
         return vx, vy, heading
 
-    def generate_trapezoidal_function(self, v, u, a, d):
-        """Generate a trapezoidal function for acceleration.
+    def generate_traezoidal_distances(self, v, u, a, d):
+        """Generate how far you have to travle to acceleration and deceleration for speed control.
         
         Args:
             v = final speed
@@ -243,10 +247,10 @@ class PurePursuit:
 
         d = abs(d)
         v_accel = (v ** 2 - u ** 2) / (2 * a)
-        v_decel = segment_distance - ((0.2 ** 2 - v ** 2) / (2 * d))
+        v_decel = (segment_distance - ((0.2 ** 2 - v ** 2) / (2 * d)))
         if v_decel < v_accel:
             self.trapezoid = False
-            return (v_accel + v_decel) / 2, v
+            return (v_accel + v_decel) / 2
         else:
             self.trapezoid = True
             return v_accel, v_decel
