@@ -38,7 +38,6 @@ class Aligner(StateMachine):
         The robot will try to correct errors untill they are within tolerance
         by strafing and moving in a hyberbolic curve towards the target.
         """
-        
         self.chassis.heading_hold_off()
         if initial_call:
             self.loop_counter = 0
