@@ -183,6 +183,7 @@ class AutoBase(AutonomousStateMachine):
         else:
             return False
 
+
 class RightStartAuto(AutoBase):
     MODE_NAME = "Right start autonomous"
 
