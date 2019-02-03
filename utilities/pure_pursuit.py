@@ -99,7 +99,9 @@ class PurePursuit:
         self.current_waypoint_number = 0
         print(self.waypoints)
         if current_waypoint <= len(self.waypoints):
-            end_point = self.waypoints[current_waypoint + 1] - self.waypoints[current_waypoint]
+            end_point = (
+                self.waypoints[current_waypoint + 1] - self.waypoints[current_waypoint]
+            )
             angle = math.atan2(end_point[1], end_point[0])
             sin_x = math.sin(angle)
             cos_y = math.cos(angle)
@@ -109,22 +111,43 @@ class PurePursuit:
                 waypoint_distance += math.hypot(
                     x - previous_waypoint[0], y - previous_waypoint[1]
                 )
-                accel, decel, speed = self.generate_trapezoidal_function(self.max_speed, self.waypoints[current_waypoint][2], 0.5, 0.5) # <--- enter actually values later 
-                start_cruise = (sin_x * accel) + waypoint[current_waypoint][0], (cos_y * accel) + waypoints[current_waypoint][1]
-                start_decel = (sin_x * (waypoint_distance - decel)) + waypoints[current_waypoint][0], (cos_y * (waypoint_distance - decel)) + waypoints[current_waypoint][1]
-                self.waypoints.insert(current_waypoint + 1,(start_cruise, self.max_speed, waypoint_distance))
-                self.waypoints.insert(current_waypoint + 2,(start_decel, self.max_speed, waypoint_distance))
+                accel, decel, speed = self.generate_trapezoidal_function(
+                    self.max_speed, self.waypoints[current_waypoint][2], 0.5, 0.5
+                )  # <--- enter actually accleration and decelartion values when avalible
+                start_cruise = (
+                    (sin_x * accel) + waypoints[current_waypoint][0],
+                    (cos_y * accel) + waypoints[current_waypoint][1],
+                )
+                start_decel = (
+                    (sin_x * decel) + waypoints[current_waypoint][0],
+                    (cos_y * decel) + waypoints[current_waypoint][1],
+                )
+                self.waypoints.insert(
+                    current_waypoint + 1,
+                    (start_cruise, self.max_speed, waypoint_distance),
+                )
+                self.waypoints.insert(
+                    current_waypoint + 2,
+                    (start_decel, self.max_speed, waypoint_distance),
+                )
                 current_waypoint += 3
-                print("waypoints")
+                print("new waypoints")
                 print("")
                 print(waypoints)
                 print("")
             if self.trapezoid == False:
-                dist_to_midpoint = self.generate_trapezoidal_function(self.max_speed, current_speed, 0.5, 0.5) # <--- enter actually values later 
-                midpoint = (sin_x * dist_to_midpoint) + waypoints[current_waypoint][0], (cos_y * midpoint) + waypoints[current_waypoint][1]
-                self.waypoints.insert(current_waypoint + 1,(midpoint, self.max_speed, waypoint_distance))
+                dist_to_midpoint = self.generate_trapezoidal_function(
+                    self.max_speed, self.waypoints[current_waypoint][2], 0.5, 0.5
+                )  # <--- enter actually acceleration and decleration values when avaliable
+                midpoint = (
+                    (sin_x * dist_to_midpoint) + waypoints[current_waypoint][0],
+                    (cos_y * dist_to_midpoint) + waypoints[current_waypoint][1],
+                )
+                self.waypoints.insert(
+                    current_waypoint + 1, (midpoint, self.max_speed, waypoint_distance)
+                )
                 current_waypoint += 2
-                
+
     def compute_direction(
         self, robot_position, segment_start, segment_end, distance_along_path
     ):
@@ -211,10 +234,17 @@ class PurePursuit:
             a = acceleration
             d = deceleration
         """
+        segment_start = self.waypoints[self.current_waypoint_number]
+        segment_end = self.waypoints[self.current_waypoint_number + 1]
+
+        segment_distance = math.hypot(
+            segment_end[0] - segment_start[0], segment_end[1] - segment_start[1]
+        )
+
         d = abs(d)
         v_accel = (v ** 2 - u ** 2) / (2 * a)
-        v_decel = (0.2 ** 2 - v ** 2) / (2 * d)
-        if (v_decel < v_accel):
+        v_decel = segment_distance - ((0.2 ** 2 - v ** 2) / (2 * d))
+        if v_decel < v_accel:
             self.trapezoid = False
             return (v_accel + v_decel) / 2, v
         else:
