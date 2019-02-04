@@ -229,28 +229,53 @@ class PurePursuit:
         heading = 0
         return vx, vy, heading
 
-    def generate_traezoidal_distances(self, v, u, a, d):
-        """Generate how far you have to travle to acceleration and deceleration for speed control.
-        
-        Args:
-            v = final speed
-            u = initial speed
+def insert_trapezoidal_waypoints(waypoints, acceleration, deceleration):
+    """Generate how far you have to travel to accelerate and decelerate for speed control.
+
+    Assumes that the robot should accelerate then cruise when v_init < v_final,
+    otherwise we cruise then decelerate.
+
+    Args:
+        acceleration = acceleration when increasing speed
+        deceleration = acceleration when decreasing speed
+    """
+    trap_waypoints = []
+    for idx in range(len(waypoints)-1):
+        segment_start = waypoints[idx]
+        segment_end = waypoints[idx + 1]
+
+        dx = segment_end[0] - segment_start[0]
+        dy = segment_end[1] - segment_start[1]
+
+        segment_distance = math.hypot(dx, dy)
+        u = segment_start[2]
+        v = segment_end[2]
+
+        trap_waypoints.append(segment_start)
+        if v > u:
+            # Faster at the end - accelerating
             a = acceleration
-            d = deceleration
-        """
-        segment_start = self.waypoints[self.current_waypoint_number]
-        segment_end = self.waypoints[self.current_waypoint_number + 1]
+            # Rearrange v^2 = u^2 + 2as
+            s = (v**2 - u**2)/(2*a)
+            if s > segment_distance:
+                # Cannot actually get to speed in time
+                # Leave the segments as they are
+                continue
+            intermediate = (dx*s/segment_distance + segment_start[0],
+                    dy*s/segment_distance + segment_start[1]) + segment_end[2:]
 
-        segment_distance = math.hypot(
-            segment_end[0] - segment_start[0], segment_end[1] - segment_start[1]
-        )
-
-        d = abs(d)
-        v_accel = (v ** 2 - u ** 2) / (2 * a)
-        v_decel = (segment_distance - ((0.2 ** 2 - v ** 2) / (2 * d)))
-        if v_decel < v_accel:
-            self.trapezoid = False
-            return (v_accel + v_decel) / 2
         else:
-            self.trapezoid = True
-            return v_accel, v_decel
+            a = deceleration
+            # Rearrange v^2 = u^2 + 2as, then subtract from the segment length
+            s = segment_distance - (v**2 - u**2)/(2*a)
+            if s < 0:
+                # Not enough time to decelerate
+                # Leave the segments as they are
+                continue
+            intermediate = (dx*s/segment_distance + segment_start[0],
+                    dy*s/segment_distance + segment_start[1]) + segment_start[2:]
+
+        trap_waypoints.append(intermediate)
+
+    trap_waypoints.append(waypoints[-1])
+    return trap_waypoints
