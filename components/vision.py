@@ -90,7 +90,10 @@ class Vision:
 
     def ping(self):
         """Send a ping to the RasPi to determine the connection latency."""
-        self.ping_time = time.monotonic()
+        t = time.monotonic()
+        if t - self.ping_time > 0.5:
+            # Only ping every 500ms - don't keep smashing NetworkTables
+            self.ping_time = time.monotonic()
 
     def pong(self):
         """Receive a pong from the RasPi to determine the connection latency."""
